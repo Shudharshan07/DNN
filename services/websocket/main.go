@@ -24,7 +24,7 @@ var upgrader = websocket.Upgrader{
 func handler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Print(FailedText(err.Error()))
 	}
 
 	WriteLoop(conn)
@@ -40,18 +40,26 @@ func WriteLoop(conn *websocket.Conn) {
 }
 
 func main() {
+	c, err := LoadEnv()
+	if err != nil {
+		fmt.Print(FailedText(err.Error()))
+	} else {
+		fmt.Print(SuccessText("Loaded %d env variables", c))
+	}
+
+	port := os.Getenv("PORT")
+
 	http.HandleFunc("/ws", handler)
 
 	server := &http.Server{
-		Addr:    ":9000",
+		Addr:    ":" + port,
 		Handler: nil,
 	}
 
 	go func() {
-		fmt.Print("Serving")
-		// fmt.Println("\x1b[37;42mServing on :9000\x1b[0m")
+		fmt.Print(SuccessText("Serving on %s", port))
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			panic(err)
+			fmt.Print(FailedText(err.Error()))
 		}
 	}()
 
