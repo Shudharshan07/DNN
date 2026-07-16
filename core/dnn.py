@@ -69,7 +69,7 @@ class Sequential:
             print(loss_v)
                     
 class Layer:
-    def __init__(self, IN: int, OUT: int):        
+    def __init__(self, IN: int, OUT: int):          
         self.W = np.random.rand(IN, OUT)
         self.B = np.random.rand(1, OUT)
         self.X = None
