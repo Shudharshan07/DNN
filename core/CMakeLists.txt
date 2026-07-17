@@ -12,6 +12,7 @@ add_executable(DNN
     utils/sequential.cpp
     utils/layer.cpp
     utils/Loss/mse.cpp
+    utils/shm_writer.cpp
 )
 
 target_include_directories(DNN PRIVATE

@@ -1,0 +1,41 @@
+package 
+
+import (
+	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+// shmName must match the name passed to SharedMemWriter in the C++ code.
+// e.g. Sequential config: SequentialConfig{ .shm_name = "DNN_SHM", ... }
+const shmName = "DNN_SHM"
+
+// pollInterval is how often the reader checks for a new version.
+// Set to time.Second for debugging; change to 16*time.Millisecond for ~60fps.
+const pollInterval = time.Second
+
+func main() {
+	reader := NewSharedMemoryReader(shmName)
+
+	if err := reader.Open(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Make sure the C++ process is running and using shm_name=%q\n", shmName)
+		os.Exit(1)
+	}
+	defer reader.Close()
+
+	// Graceful shutdown on Ctrl+C / SIGTERM.
+	stop := make(chan struct{})
+	sig  := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-sig
+		fmt.Println("\nShutting down.")
+		close(stop)
+	}()
+
+	reader.Run(pollInterval, stop)
+}

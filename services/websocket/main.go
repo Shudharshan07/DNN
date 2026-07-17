@@ -1,6 +1,7 @@
 package main
 
 import (
+	"DNN/services/reader"
 	"context"
 	"errors"
 	"fmt"
@@ -63,9 +64,16 @@ func main() {
 		}
 	}()
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
+
+	out := make(chan *reader.Snapshot)
+	go StartStream("DNN_SHM", time.Second, ctx, out)
 
 	<-ctx.Done()
 	server.Shutdown(ctx)
+
+	shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	server.Shutdown(shutCtx)
 }

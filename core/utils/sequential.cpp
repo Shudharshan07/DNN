@@ -18,13 +18,16 @@ void Sequential::Back(const Matrix& pred,const Matrix& actual)
 
 void Sequential::Train(int epoch)
 {
-    int n = this->data.size();
+    int n    = this->data.size();
+    int step = 0;
 
     for (int e = 0; e < epoch; e++)
     {
         float loss_y = 0.0f;
 
-        for (int i = 0; i < n; i++)
+        
+
+        for (int i = 0; i < n; i++, ++step)
         {
             Matrix out = this->layers[0].Forward(this->data.X.row(i));
 
@@ -33,12 +36,24 @@ void Sequential::Train(int epoch)
                 out = this->layers[j].Forward(out);
             }
 
-            loss_y += this->loss.Loss(out, this->data.Y.row(i));
+            const float sample_loss = this->loss.Loss(out, this->data.Y.row(i));
+            loss_y += sample_loss;
 
             this->Back(out, this->data.Y.row(i));
+
+            if (shm_writer_ && (step % snapshot_interval_ == 0))
+            {
+                shm_writer_->Write(
+                    this->layers,
+                    static_cast<uint32_t>(e),
+                    static_cast<uint32_t>(step),
+                    sample_loss
+                );
+            }
         }
 
-        std::cout << "Epoch " << e + 1 << " loss: " << loss_y / n << "\n";
+        const float avg_loss = loss_y / n;
+        std::cout << "Epoch " << e + 1 << " loss: " << avg_loss << "\n";
     }
 }
 

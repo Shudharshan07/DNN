@@ -4,6 +4,15 @@
 #include <random>
 #include <cmath>
 
+// Windows headers define IN and OUT as empty macros, which breaks
+// parameter names. Undefine them if they snuck in via windows.h.
+#ifdef IN
+#  undef IN
+#endif
+#ifdef OUT
+#  undef OUT
+#endif
+
 inline void He_Init(Matrix& W)
 {
     float stddev = std::sqrt(2.0f / static_cast<float>(W.rows));
