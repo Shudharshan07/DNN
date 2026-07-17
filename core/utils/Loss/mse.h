@@ -1,13 +1,16 @@
 #pragma once
 
-#include "../utils/matrix.h"
+#include "../matrix.h"
 
 class MSE
 {
 public:
-    // Compute mean squared error
     float operator()(const Matrix& Y_actual, const Matrix& Y_pred) const;
 
-    // Compute dLoss/dPrediction
+    float Loss(const Matrix& Y_actual, const Matrix& Y_pred) const
+    {
+        return (*this)(Y_actual, Y_pred);
+    }
+
     Matrix Derivative(const Matrix& Y_actual, const Matrix& Y_pred) const;
 };

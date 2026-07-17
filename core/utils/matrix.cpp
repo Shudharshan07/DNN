@@ -9,8 +9,17 @@ Matrix::Matrix()
 }
 
 Matrix::Matrix(int r, int c)
-    : rows(r), cols(c), data(r * c, 1)
+    : rows(r), cols(c), data(r * c, 0.0f)
 {
+}
+
+Matrix Matrix::row(int i) const
+{
+    Matrix r(1, cols);
+    const float* src = data.data() + i * cols;
+    for (int c = 0; c < cols; ++c)
+        r.data[c] = src[c];
+    return r;
 }
 
 Matrix Multiply(const Matrix& A, const Matrix& B) 
@@ -38,18 +47,20 @@ Matrix Multiply(const Matrix& A, const Matrix& B)
     return C;
 }
 
+
 Matrix Multiply_A_T(const Matrix& A, const Matrix& B) 
 {
-
-    Matrix C(A.rows, B.cols);
+    // Computes A^T * B
+    // A is (m x k), A^T is (k x m), B is (m x n) => C is (k x n)
+    Matrix C(A.cols, B.cols);
 
     cblas_sgemm(
         CblasRowMajor,
         CblasTrans,
         CblasNoTrans,
-        A.rows,
-        B.cols,
-        A.cols,
+        A.cols,   // rows of A^T
+        B.cols,   // cols of B
+        A.rows,   // inner dimension
         1.0f,
         A.data.data(),
         A.cols,
@@ -65,16 +76,17 @@ Matrix Multiply_A_T(const Matrix& A, const Matrix& B)
 
 Matrix Multiply_B_T(const Matrix& A, const Matrix& B) 
 {
-
-    Matrix C(A.rows, B.cols);
+    // Computes A * B^T
+    // A is (m x k), B^T is (k x n) => B is (n x k) => C is (m x n)
+    Matrix C(A.rows, B.rows);
 
     cblas_sgemm(
         CblasRowMajor,
         CblasNoTrans,
         CblasTrans,
-        A.rows,
-        B.cols,
-        A.cols,
+        A.rows,   // rows of A
+        B.rows,   // rows of B (cols of B^T)
+        A.cols,   // inner dimension
         1.0f,
         A.data.data(),
         A.cols,
@@ -82,7 +94,7 @@ Matrix Multiply_B_T(const Matrix& A, const Matrix& B)
         B.cols,
         0.0f,
         C.data.data(),
-        B.cols
+        B.rows
     );
 
     return C;
@@ -98,14 +110,14 @@ void Multiply(Matrix& A, float scalar)
     );
 }
 
-Matrix Multiply_Copy(Matrix& A, float scalar)
+Matrix Multiply_Copy(const Matrix& A, float scalar)
 {
     Matrix C = A; 
 
     cblas_sscal(
-        A.data.size(),
+        C.data.size(),
         scalar,
-        A.data.data(),
+        C.data.data(),
         1
     );
 

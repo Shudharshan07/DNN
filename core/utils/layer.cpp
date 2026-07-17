@@ -3,36 +3,26 @@
 #include <cmath>
 #include "layer.h"
 
-
-class Layer 
+Matrix Layer::Forward(const Matrix& X_IN)
 {
-    public:
-        Matrix Weight;
-        Matrix Bias;
-        Matrix X;
-        float lr;
+    X = X_IN;
 
-        Matrix Backward(const Matrix& grad)
-        {
-            Matrix prev = Multiply_B_T(grad, Weight);
+    Matrix out = Multiply(X_IN, Weight);
+    Add_Bias(out, Bias);
 
-            Matrix dW = Multiply_A_T(X, grad);
-            Multiply_Inplace(dW, lr);
-            Subtract(Weight, dW);
+    return out;
+}
 
-            Matrix dB = Multiply_Copy(grad, lr); // Replace with SumRows() for batched input
-            Subtract(Bias, dB);
+Matrix Layer::Backward(const Matrix& grad)
+{
+    Matrix prev = Multiply_B_T(grad, Weight);
 
-            return prev;
-        }
+    Matrix dW = Multiply_A_T(X, grad);
+    Multiply_Inplace(dW, lr);
+    Subtract(Weight, dW);
 
-        Matrix Forward(const Matrix& X_IN) {
-            this->X = X_IN;
+    Matrix dB = Multiply_Copy(grad, lr);
+    Subtract(Bias, dB);
 
-            Matrix out = Multiply(X_IN, Weight);
-
-            Add_Bias(out, Bias);
-
-            return out;
-        }
-};
+    return prev;
+}

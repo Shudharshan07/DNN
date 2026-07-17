@@ -11,6 +11,9 @@ public:
 
     Matrix();
     Matrix(int rows, int cols);
+
+    // Returns a [1, cols] copy of row i.
+    Matrix row(int i) const;
 };
 
 Matrix Multiply(const Matrix& A, const Matrix& B);

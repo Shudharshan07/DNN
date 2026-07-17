@@ -8,11 +8,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(DNN
     src/main.cpp
     utils/matrix.cpp
+    utils/Data/data.cpp
+    utils/sequential.cpp
+    utils/layer.cpp
+    utils/Loss/mse.cpp
 )
 
 target_include_directories(DNN PRIVATE
     ${CMAKE_SOURCE_DIR}/utils
-    ${CMAKE_SOURCE_DIR}/utils/MSE
+    ${CMAKE_SOURCE_DIR}/utils/Loss
+    ${CMAKE_SOURCE_DIR}/utils/Data
 )
 
 target_link_directories(DNN PRIVATE

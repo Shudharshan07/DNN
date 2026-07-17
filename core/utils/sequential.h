@@ -2,7 +2,8 @@
 
 #include <vector>
 #include "layer.h"
-#include "mse.h"
+#include "Loss/mse.h"
+#include "Data/data.h"
 
 struct SequentialConfig
 {
@@ -18,6 +19,7 @@ class Sequential
         int batch_size;
         MSE loss;
         float lr;
+        Data data;
     
         template<typename... Layers>
         Sequential(const SequentialConfig& cfg, Layers... ls)
@@ -28,4 +30,7 @@ class Sequential
         for (auto& layer : layers)
             layer.lr = lr;
     }
+
+    void Back(const Matrix& pred,const Matrix& actual);
+    void Train(int epoch);
 };
