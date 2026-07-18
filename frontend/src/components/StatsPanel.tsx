@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { SettingsPanel } from './SettingsPanel';
 import type { Snapshot } from '../types/snapshot';
 
 interface StatsPanelProps {
@@ -35,6 +37,12 @@ const summarize = (values: number[]) => {
 };
 
 export const StatsPanel = ({ snapshot, isConnected }: StatsPanelProps) => {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  if (isSettingsOpen) {
+    return <SettingsPanel onBack={() => setIsSettingsOpen(false)} />;
+  }
+
   return (
     <div className="stats-panel">
       <header className="panel-header">
@@ -42,6 +50,15 @@ export const StatsPanel = ({ snapshot, isConnected }: StatsPanelProps) => {
           <span aria-hidden="true" />
           {isConnected ? 'Connected' : 'Disconnected'}
         </span>
+        <button
+          className="panel-icon-button"
+          type="button"
+          onClick={() => setIsSettingsOpen(true)}
+          aria-label="Open settings"
+          title="Settings"
+        >
+          Settings
+        </button>
       </header>
 
       <section className="metrics-grid" aria-label="Training metrics">

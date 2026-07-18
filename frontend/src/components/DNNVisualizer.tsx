@@ -1,10 +1,14 @@
-import { useEffect, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { Snapshot } from '../types/snapshot';
 
 interface DNNVisualizerProps {
   snapshot: Snapshot | null;
+}
+
+export interface DNNVisualizerHandle {
+  resetView: () => void;
 }
 
 // Build the unique list of neuron counts per column (input, hidden..., output)
@@ -17,7 +21,13 @@ function getNodeCounts(snapshot: Snapshot): number[] {
   return counts;
 }
 
-export const DNNVisualizer = ({ snapshot }: DNNVisualizerProps) => {
+const getCameraDistance = (nodeCounts: number[]) => {
+  if (!nodeCounts.length) return 20;
+  const networkWidth = (nodeCounts.length - 1) * 4.5;
+  return networkWidth * 1.2 + 10;
+};
+
+export const DNNVisualizer = forwardRef<DNNVisualizerHandle, DNNVisualizerProps>(({ snapshot }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -27,6 +37,22 @@ export const DNNVisualizer = ({ snapshot }: DNNVisualizerProps) => {
   const rafRef = useRef<number>(0);
   const userInteractedRef = useRef(false);
   const fittedTopologyRef = useRef<string | null>(null);
+  const nodeCountsRef = useRef<number[]>([]);
+
+  const resetView = () => {
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    if (!camera || !controls) return;
+
+    const distance = getCameraDistance(nodeCountsRef.current);
+    camera.position.set(0, 0, distance);
+    camera.lookAt(0, 0, 0);
+    controls.target.set(0, 0, 0);
+    controls.update();
+    userInteractedRef.current = false;
+  };
+
+  useImperativeHandle(ref, () => ({ resetView }), []);
 
   // Setup scene once
   useEffect(() => {
@@ -56,6 +82,8 @@ export const DNNVisualizer = ({ snapshot }: DNNVisualizerProps) => {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.minDistance = 5;
+    controls.maxDistance = 80;
     controls.addEventListener('start', () => {
       userInteractedRef.current = true;
     });
@@ -125,7 +153,15 @@ export const DNNVisualizer = ({ snapshot }: DNNVisualizerProps) => {
     if (!snapshot) return;
 
     const nodeCounts = getNodeCounts(snapshot);
+    nodeCountsRef.current = nodeCounts;
     if (!nodeCounts.length) return;
+
+    const controls = controlsRef.current;
+    if (controls) {
+      const homeDistance = getCameraDistance(nodeCounts);
+      controls.minDistance = Math.max(2.5, homeDistance * 0.14);
+      controls.maxDistance = Math.max(40, homeDistance * 3.2);
+    }
 
     const group = new THREE.Group();
     networkGroupRef.current = group;
@@ -183,15 +219,15 @@ export const DNNVisualizer = ({ snapshot }: DNNVisualizerProps) => {
       const isInput = colIdx === 0;
       const isOutput = colIdx === nodeCounts.length - 1;
 
-      const nodeColor = isInput ? 0x34c759 : isOutput ? 0xff7a59 : 0x0a84ff;
-      const emissive = isInput ? 0xe8fff0 : isOutput ? 0xffeee8 : 0xeaf3ff;
+      const nodeColor = isInput ? 0x168a3a : isOutput ? 0xc2410c : 0x0759c9;
+      const emissive = isInput ? 0x082d16 : isOutput ? 0x3a1205 : 0x061f4f;
 
       for (let i = 0; i < count; i++) {
         const mat = new THREE.MeshPhongMaterial({
           color: nodeColor,
           emissive,
-          shininess: 36,
-          specular: 0xffffff,
+          shininess: 72,
+          specular: 0xdbeafe,
         });
         const mesh = new THREE.Mesh(nodeGeo, mat);
         mesh.position.copy(positions[colIdx][i]);
@@ -204,13 +240,10 @@ export const DNNVisualizer = ({ snapshot }: DNNVisualizerProps) => {
     const camera = cameraRef.current;
     const topologyKey = nodeCounts.join('x');
     if (camera && !userInteractedRef.current && fittedTopologyRef.current !== topologyKey) {
-      const networkWidth = (nodeCounts.length - 1) * layerSpacingX;
-      camera.position.set(0, 0, networkWidth * 1.2 + 10);
-      camera.lookAt(0, 0, 0);
+      resetView();
       fittedTopologyRef.current = topologyKey;
-      controlsRef.current?.update();
     }
   }, [snapshot]);
 
   return <div ref={containerRef} className="visualizer-canvas" />;
-};
+});
