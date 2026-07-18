@@ -302,7 +302,6 @@ func (r *SharedMemoryReader) Run(interval time.Duration, stop context.Context, o
 			return
 		case <-ticker.C:
 			if snap := r.Poll(); snap != nil {
-				fmt.Println("Wrote in channel")
 				out <- snap
 			}
 		}

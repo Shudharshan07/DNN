@@ -24,7 +24,7 @@ package reader
 // ---------------------------------------------------------------------------
 
 const (
-	shmHeaderSize  = 24 // sizeof(ShmHeader)  — packed, no padding
+	shmHeaderSize   = 24 // sizeof(ShmHeader)  — packed, no padding
 	layerHeaderSize = 12 // sizeof(LayerHeader) — packed, no padding
 )
 
@@ -39,23 +39,23 @@ type ShmHeader struct {
 
 // LayerHeader mirrors the C++ LayerHeader struct.
 type LayerHeader struct {
-	Rows     uint32
-	Cols     uint32
-	BiasSize uint32
+	Rows     uint32 `json:"rows"`
+	Cols     uint32 `json:"cols"`
+	BiasSize uint32 `json:"bias_size"`
 }
 
 // LayerSnapshot holds a fully deserialized layer from shared memory.
 type LayerSnapshot struct {
-	Header  LayerHeader
-	Weights []float32
-	Biases  []float32
+	Header  LayerHeader `json:"header"`
+	Weights []float32   `json:"weights"`
+	Biases  []float32   `json:"biases"`
 }
 
 // Snapshot is a fully deserialized frame from shared memory.
 type Snapshot struct {
-	Version uint64
-	Epoch   uint32
-	Step    uint32
-	Loss    float32
-	Layers  []LayerSnapshot
+	Version uint64          `json:"version"`
+	Epoch   uint32          `json:"epoch"`
+	Step    uint32          `json:"step"`
+	Loss    float32         `json:"loss"`
+	Layers  []LayerSnapshot `json:"layers"`
 }

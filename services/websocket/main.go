@@ -22,21 +22,21 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
+var out = make(chan *reader.Snapshot)
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Print(FailedText(err.Error()))
 	}
 
-	WriteLoop(conn)
+	WriteLoop(conn, out)
 }
 
-func WriteLoop(conn *websocket.Conn) {
+func WriteLoop(conn *websocket.Conn, out chan *reader.Snapshot) {
 
-	for {
-		msg := time.Now().String()
-		conn.WriteMessage(1, []byte(msg))
-		time.Sleep(1 * time.Second)
+	for snap := range out {
+		conn.WriteJSON(snap)
 	}
 }
 
@@ -67,7 +67,6 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	out := make(chan *reader.Snapshot)
 	go StartStream("DNN_SHM", time.Second, ctx, out)
 
 	<-ctx.Done()

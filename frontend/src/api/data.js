@@ -1,6 +1,6 @@
 
 
-const url = "ws://localhost:9000/ws"
+const url = "ws://localhost:8000/ws"
 const socket = new WebSocket(url)
 
 socket.onopen = () => {

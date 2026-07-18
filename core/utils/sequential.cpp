@@ -5,6 +5,8 @@
 #include <vector>
 #include <iostream>
 #include <ranges>
+#include <thread>
+#include <chrono>
 
 
 void Sequential::Back(const Matrix& pred,const Matrix& actual)
@@ -51,6 +53,8 @@ void Sequential::Train(int epoch)
                 );
             }
         }
+        
+        std::this_thread::sleep_for(std::chrono::seconds(2));
 
         const float avg_loss = loss_y / n;
         std::cout << "Epoch " << e + 1 << " loss: " << avg_loss << "\n";
