@@ -49,6 +49,7 @@ func main() {
 	}
 
 	port := os.Getenv("PORT")
+	SHM_NAME := os.Getenv("SHM_NAME")
 
 	http.HandleFunc("/ws", handler)
 
@@ -67,7 +68,7 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	go StartStream("DNN_SHM", time.Second, ctx, out)
+	go StartStream(SHM_NAME, time.Second, ctx, out)
 
 	<-ctx.Done()
 	server.Shutdown(ctx)

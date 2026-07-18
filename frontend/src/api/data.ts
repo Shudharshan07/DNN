@@ -1,6 +1,4 @@
-
-
-const url = "ws://localhost:8000/ws"
+const url = `${import.meta.env.NEXT_PUBLIC_WS_URL}/ws`
 const socket = new WebSocket(url)
 
 socket.onopen = () => {
