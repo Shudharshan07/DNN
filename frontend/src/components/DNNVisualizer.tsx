@@ -14,9 +14,10 @@ export interface DNNVisualizerHandle {
 // Build the unique list of neuron counts per column (input, hidden..., output)
 function getNodeCounts(snapshot: Snapshot): number[] {
   if (!snapshot.layers.length) return [];
-  const counts: number[] = [snapshot.layers[0].header.cols];
+  // rows=IN, cols=OUT for each layer weight matrix
+  const counts: number[] = [snapshot.layers[0].header.rows];
   for (const layer of snapshot.layers) {
-    counts.push(layer.header.rows);
+    counts.push(layer.header.cols);
   }
   return counts;
 }
@@ -191,8 +192,8 @@ export const DNNVisualizer = forwardRef<DNNVisualizerHandle, DNNVisualizerProps>
 
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-          const from = fromPositions[c];
-          const to = toPositions[r];
+          const from = fromPositions[r];
+          const to = toPositions[c];
           if (!from || !to) continue; // guard against shape mismatch
 
           const w = layer.weights[r * cols + c] ?? 0;

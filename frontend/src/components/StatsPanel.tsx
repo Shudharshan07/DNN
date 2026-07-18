@@ -1,10 +1,14 @@
 import { useState } from 'react';
+import { RefreshCw, Settings } from 'lucide-react';
 import { SettingsPanel } from './SettingsPanel';
 import type { Snapshot } from '../types/snapshot';
 
 interface StatsPanelProps {
   snapshot: Snapshot | null;
   isConnected: boolean;
+  onReconnect: () => void;
+  is3D: boolean;
+  onToggle3D: (value: boolean) => void;
 }
 
 const formatNumber = (value: number | undefined, digits = 6) => {
@@ -36,20 +40,33 @@ const summarize = (values: number[]) => {
   };
 };
 
-export const StatsPanel = ({ snapshot, isConnected }: StatsPanelProps) => {
+export const StatsPanel = ({ snapshot, isConnected, onReconnect, is3D, onToggle3D }: StatsPanelProps) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   if (isSettingsOpen) {
-    return <SettingsPanel onBack={() => setIsSettingsOpen(false)} />;
+    return <SettingsPanel onBack={() => setIsSettingsOpen(false)} is3D={is3D} onToggle3D={onToggle3D} />;
   }
 
   return (
     <div className="stats-panel">
       <header className="panel-header">
-        <span className={`status-pill ${isConnected ? 'is-connected' : 'is-disconnected'}`}>
-          <span aria-hidden="true" />
-          {isConnected ? 'Connected' : 'Disconnected'}
-        </span>
+        <div className="status-pill-group">
+          <span className={`status-pill ${isConnected ? 'is-connected' : 'is-disconnected'}`}>
+            <span aria-hidden="true" />
+            {isConnected ? 'Connected' : 'Disconnected'}
+          </span>
+          {!isConnected && (
+            <button
+              className="panel-icon-button retry-button"
+              type="button"
+              onClick={onReconnect}
+              aria-label="Retry connection"
+              title="Retry connection"
+            >
+              <RefreshCw size={13} strokeWidth={2.2} />
+            </button>
+          )}
+        </div>
         <button
           className="panel-icon-button"
           type="button"
@@ -57,7 +74,7 @@ export const StatsPanel = ({ snapshot, isConnected }: StatsPanelProps) => {
           aria-label="Open settings"
           title="Settings"
         >
-          Settings
+          <Settings size={13} strokeWidth={2.2} />
         </button>
       </header>
 
@@ -98,7 +115,7 @@ export const StatsPanel = ({ snapshot, isConnected }: StatsPanelProps) => {
                 <div className="layer-card-header">
                   <div>
                     <h3>Layer {idx + 1}</h3>
-                    <p>{layer.header.cols} to {layer.header.rows}</p>
+                    <p>{layer.header.rows} to {layer.header.cols}</p>
                   </div>
                   <span>{layer.header.bias_size} bias</span>
                 </div>
